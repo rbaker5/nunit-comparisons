@@ -20,11 +20,6 @@ namespace NUnit.Comparisons
         private Lazy<Dictionary<Type, ExportFactory<ICompareConstraint, ICompareConstraintFactoryData>>>
             _constraintsByActualType;
 
-        //private static bool AllowSupertype(object actual)
-        //{
-        //    return actual is XNode || actual is XsFacet;
-        //}
-
         public CompareConstraintFactory()
         {
            resetCache();
@@ -101,12 +96,8 @@ namespace NUnit.Comparisons
 
         private bool TryGetFactory(Type expectedType, Type actualType, out ExportFactory<ICompareConstraint, ICompareConstraintFactoryData> factory)
         {
-            bool allowSupertype = true;
             if (ConstraintsByType.TryGetValue(Tuple.Create(expectedType, actualType), out factory))
                 return true;
-            
-            if (!allowSupertype) 
-                return false;
 
             while (actualType != null && !ConstraintsByActual.ContainsKey(actualType))
                 actualType = actualType.BaseType;
