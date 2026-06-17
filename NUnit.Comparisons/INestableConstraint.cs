@@ -1,10 +1,9 @@
 using System;
 
-namespace NUnit.Comparisons
+namespace NUnit.Comparisons;
+
+public interface INestableConstraint
 {
-    public interface INestableConstraint
-    {
-        int Level { get; set; }
-        bool SkipsNewLine { get; set; }
-    }
+    int Level { get; set; }
+    bool SkipsNewLine { get; set; }
 }

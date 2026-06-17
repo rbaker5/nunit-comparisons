@@ -4,84 +4,83 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using NUnit.Framework.Constraints;
 
-namespace NUnit.Comparisons
+namespace NUnit.Comparisons;
+
+public class ConstraintComparer : IEqualityComparer
 {
-    public class ConstraintComparer : IEqualityComparer
+    private readonly ConcurrentDictionary<Tuple<Type, Type>, ICompareConstraint> _reusableConstraints;
+    private readonly List<ConstraintResult> _failedResults;
+    public int Level { get; set; }
+    public bool SkipsNewLine { get; set; }
+
+    public ConstraintComparer()
     {
-        private readonly ConcurrentDictionary<Tuple<Type, Type>, ICompareConstraint> _reusableConstraints;
-        private readonly List<ConstraintResult> _failedResults;
-        public int Level { get; set; }
-        public bool SkipsNewLine { get; set; }
+        _reusableConstraints = new ConcurrentDictionary<Tuple<Type, Type>, ICompareConstraint>();
+        _failedResults = new List<ConstraintResult>();
+    }
 
-        public ConstraintComparer()
-        {
-            _reusableConstraints = new ConcurrentDictionary<Tuple<Type, Type>, ICompareConstraint>();
-            _failedResults = new List<ConstraintResult>();
-        }
+    public bool CanCompare(object expected, object actual)
+    {
+        return tryGetConstraint(expected, actual, out _);
+    }
 
-        public bool CanCompare(object expected, object actual)
-        {
-            return tryGetConstraint(expected, actual, out _);
-        }
+    public bool NameEquals(object expected, object actual)
+    {
+        if (!tryGetConstraint(expected, actual, out var constraint)) return false;
+        return string.Equals(constraint.GetExpectedName(expected), constraint.GetActualName(actual));
+    }
 
-        public bool NameEquals(object expected, object actual)
-        {
-            if (!tryGetConstraint(expected, actual, out var constraint)) return false;
-            return string.Equals(constraint.GetExpectedName(expected), constraint.GetActualName(actual));
-        }
+    public new bool Equals(object? expected, object? actual)
+    {
+        if (expected == null || actual == null) return ReferenceEquals(expected, actual);
+        if (!tryRemoveConstraint(expected, actual, out var constraint))
+            return false;
 
-        public new bool Equals(object? expected, object? actual)
+        var result = constraint.Resolve().ApplyTo(actual);
+        if (result.IsSuccess)
+            return true;
+
+        _failedResults.Add(result);
+        return false;
+    }
+
+    private bool tryGetConstraint(object expected, object actual, out ICompareConstraint constraint)
+    {
+        var typeSignature = Tuple.Create(expected.GetType(), actual.GetType());
+        if (!_reusableConstraints.TryGetValue(typeSignature, out constraint!))
         {
-            if (expected == null || actual == null) return ReferenceEquals(expected, actual);
-            if (!tryRemoveConstraint(expected, actual, out var constraint))
+            if (!CompareConstraintFactory.Instance.TryCreateConstraint(expected, actual, out constraint))
                 return false;
 
-            var result = constraint.Resolve().ApplyTo(actual);
-            if (result.IsSuccess)
-                return true;
-
-            _failedResults.Add(result);
-            return false;
+            constraint.Level = Level;
+            constraint.SkipsNewLine = SkipsNewLine;
+            _reusableConstraints.TryAdd(typeSignature, constraint);
         }
+        return true;
+    }
 
-        private bool tryGetConstraint(object expected, object actual, out ICompareConstraint constraint)
+    private bool tryRemoveConstraint(object expected, object actual, out ICompareConstraint constraint)
+    {
+        var typeSignature = Tuple.Create(expected.GetType(), actual.GetType());
+        if (_reusableConstraints.TryRemove(typeSignature, out constraint!))
         {
-            var typeSignature = Tuple.Create(expected.GetType(), actual.GetType());
-            if (!_reusableConstraints.TryGetValue(typeSignature, out constraint!))
-            {
-                if (!CompareConstraintFactory.Instance.TryCreateConstraint(expected, actual, out constraint))
-                    return false;
-
-                constraint.Level = Level;
-                constraint.SkipsNewLine = SkipsNewLine;
-                _reusableConstraints.TryAdd(typeSignature, constraint);
-            }
-            return true;
+            constraint.Initialize(expected);
         }
-
-        private bool tryRemoveConstraint(object expected, object actual, out ICompareConstraint constraint)
+        else
         {
-            var typeSignature = Tuple.Create(expected.GetType(), actual.GetType());
-            if (_reusableConstraints.TryRemove(typeSignature, out constraint!))
-            {
-                constraint.Initialize(expected);
-            }
-            else
-            {
-                if (!CompareConstraintFactory.Instance.TryCreateConstraint(expected, actual, out constraint))
-                    return false;
+            if (!CompareConstraintFactory.Instance.TryCreateConstraint(expected, actual, out constraint))
+                return false;
 
-                constraint.Level = Level;
-                constraint.SkipsNewLine = SkipsNewLine;
-            }
-            return true;
+            constraint.Level = Level;
+            constraint.SkipsNewLine = SkipsNewLine;
         }
+        return true;
+    }
 
-        public int GetHashCode(object obj) => throw new NotImplementedException();
+    public int GetHashCode(object obj) => throw new NotImplementedException();
 
-        public void WriteMessageTo(MessageWriter writer)
-        {
-            _failedResults.ForEach(r => r.WriteMessageTo(writer));
-        }
+    public void WriteMessageTo(MessageWriter writer)
+    {
+        _failedResults.ForEach(r => r.WriteMessageTo(writer));
     }
 }

@@ -1,28 +1,27 @@
 using System;
 using NUnit.Framework.Constraints;
 
-namespace NUnit.Comparisons
+namespace NUnit.Comparisons;
+
+public class Has : Framework.Has
 {
-    public class Has : Framework.Has
+    public new static ResolvableConstraintExpression Property(string name)
     {
-        public new static ResolvableConstraintExpression Property(string name)
-        {
-            return new ConstraintExpression().PropertyExt(name);
-        }
+        return new ConstraintExpression().PropertyExt(name);
+    }
 
-        public static ResolvableConstraintExpression Method(string name, params object[] arguments)
-        {
-            return new ConstraintExpression().Method(name, arguments);
-        }
+    public static ResolvableConstraintExpression Method(string name, params object[] arguments)
+    {
+        return new ConstraintExpression().Method(name, arguments);
+    }
 
-        public static ResolvableConstraintExpression Method(Func<object> func, params object[] arguments)
-        {
-            return new ConstraintExpression().Method(func, arguments);
-        }
+    public static ResolvableConstraintExpression Method(Func<object> func, params object[] arguments)
+    {
+        return new ConstraintExpression().Method(func, arguments);
+    }
 
-        public static ResolvableConstraintExpression Cast<T>()
-        {
-            return new ConstraintExpression().Cast<T>();
-        }
+    public static ResolvableConstraintExpression Cast<T>()
+    {
+        return new ConstraintExpression().Cast<T>();
     }
 }

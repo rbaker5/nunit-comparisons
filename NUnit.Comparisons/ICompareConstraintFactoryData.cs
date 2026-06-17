@@ -1,10 +1,9 @@
 using System;
 
-namespace NUnit.Comparisons
+namespace NUnit.Comparisons;
+
+public interface ICompareConstraintFactoryData
 {
-    public interface ICompareConstraintFactoryData
-    {
-        Type ActualType { get; }
-        Type ExpectedType { get; }
-    }
+    Type ActualType { get; }
+    Type ExpectedType { get; }
 }

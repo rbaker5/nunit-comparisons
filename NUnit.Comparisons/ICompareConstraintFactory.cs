@@ -1,9 +1,8 @@
 using System;
 
-namespace NUnit.Comparisons
+namespace NUnit.Comparisons;
+
+public interface ICompareConstraintFactory
 {
-    public interface ICompareConstraintFactory
-    {
-        ICompareConstraint CreateComparer(object expected);
-    }
+    ICompareConstraint CreateComparer(object expected);
 }

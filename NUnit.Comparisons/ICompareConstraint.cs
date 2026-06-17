@@ -1,12 +1,11 @@
 using System;
 using NUnit.Framework.Constraints;
 
-namespace NUnit.Comparisons
+namespace NUnit.Comparisons;
+
+public interface ICompareConstraint : IResolveConstraint, INestableConstraint
 {
-    public interface ICompareConstraint : IResolveConstraint, INestableConstraint
-    {
-        string? GetActualName(object actual);
-        string? GetExpectedName(object expected);
-        void Initialize(object expected);
-    }
+    string? GetActualName(object actual);
+    string? GetExpectedName(object expected);
+    void Initialize(object expected);
 }
