@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 using NUnit.Comparisons.Xml;
@@ -14,26 +9,26 @@ namespace NUnit.Comparisons.Tests
     [TestFixture]
     public class XmlXDocumentFixture
     {
-        [TestFixtureSetUp]
+        [OneTimeSetUp]
         public void SetupAssembly()
         {
-            CompareConstraintFactory.AddAssembly(Assembly.GetAssembly(typeof (XElementConstraint)));
+            CompareConstraintFactory.AddAssembly(typeof(XElementConstraint).Assembly);
         }
 
         [Test]
         public void ReadAndCompareSame()
         {
-            readAndCompare("Samples\\Sample.xml", "Samples\\Sample.xml");
+            ReadAndCompare(Path.Combine("Samples", "Sample.xml"), Path.Combine("Samples", "Sample.xml"));
         }
 
         [Test]
-        [ExpectedException]
         public void ReadAndCompareDiffSaluation()
         {
-            readAndCompare("Samples\\Sample.xml", "Samples\\DiffSalutation.xml");
+            Assert.Throws<AssertionException>(() =>
+                ReadAndCompare(Path.Combine("Samples", "Sample.xml"), Path.Combine("Samples", "DiffSalutation.xml")));
         }
 
-        private void readAndCompare(string actualPath, string expectedPath)
+        private static void ReadAndCompare(string actualPath, string expectedPath)
         {
             var old = new XmlDocument();
             old.Load(expectedPath);

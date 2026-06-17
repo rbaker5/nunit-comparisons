@@ -5,30 +5,22 @@ namespace NUnit.Comparisons
 {
     public class MessageConstraint : Constraint
     {
-        public Constraint BaseConstraint { get; private set; }
-        public String Message { get; private set; }
+        public IConstraint BaseConstraint { get; private set; }
+        public string Message { get; private set; }
 
-        public MessageConstraint(Constraint baseConstraint, String message)
+        public MessageConstraint(IConstraint baseConstraint, string message)
         {
             BaseConstraint = baseConstraint;
             Message = message;
         }
 
-        public override bool Matches(object actual)
+        public override ConstraintResult ApplyTo<TActual>(TActual actual)
         {
-            this.actual = actual;
-            return BaseConstraint.Matches(actual);
+            var innerResult = BaseConstraint.ApplyTo(actual);
+            return new DelegatingConstraintResult(this, actual, innerResult.IsSuccess,
+                writer => innerResult.WriteMessageTo(writer));
         }
 
-        public override void WriteDescriptionTo(MessageWriter writer)
-        {
-            writer.Write(Message);
-            //BaseConstraint.WriteDescriptionTo(writer);
-        }
-
-        public override void WriteActualValueTo(MessageWriter writer)
-        {
-            BaseConstraint.WriteActualValueTo(writer);
-        }
+        public override string Description => Message;
     }
 }

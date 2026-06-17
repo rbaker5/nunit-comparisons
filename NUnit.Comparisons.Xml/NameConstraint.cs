@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 using NUnit.Framework.Constraints;
@@ -14,41 +11,6 @@ namespace NUnit.Comparisons.Xml
             AddCustomConstraints();
         }
 
-        public override bool Matches(object actual)
-        {
-            this.actual = actual;           
-            if ((Expected == null || Expected.IsEmpty) && actual == null)
-                    return true;
-
-            if (actual == null || Expected == null)
-                    return false;
-
-            return (Expected.Namespace == Actual.NamespaceName && Expected.Name == Actual.LocalName);
-        }
-
-        public override void WriteMessageTo(MessageWriter writer)
-        {
-            if (Expected == null || Expected.IsEmpty)
-            {
-                if (!SkipsNewLine) writer.WriteIndent(Level);
-                writer.Write("XName {");
-                WriteActualName(writer);
-                writer.Write("} was expected to be null.");
-            }
-            else if (Actual == null)
-            {
-                if (!SkipsNewLine) writer.WriteIndent(Level);
-                writer.Write("XName was null when ");
-                writer.Write(" {");
-                WriteExpectedName(writer);
-                writer.WriteLine("} was expected.");
-            }
-            else
-            {
-                writer.DisplayDifferences(this);
-            }
-        }
-
         protected override void AddCustomConstraints()
         {
             if (Expected == null)
@@ -60,9 +22,7 @@ namespace NUnit.Comparisons.Xml
                         Expected.Namespace);
 
                 if (Expected.IsEmpty)
-                {
                     Add(new OrConstraint(Is.Null, finalConstraint));
-                }
                 else
                 {
                     Add(Is.Not.Null);
@@ -71,14 +31,7 @@ namespace NUnit.Comparisons.Xml
             }
         }
 
-        public override string GetActualName(XName actual)
-        {
-            return actual.ToString();
-        }
-
-        public override string GetExpectedName(XmlQualifiedName expected)
-        {
-            return expected.ToString();
-        }
+        public override string GetActualName(XName actual) => actual.ToString();
+        public override string GetExpectedName(XmlQualifiedName expected) => expected.ToString();
     }
 }

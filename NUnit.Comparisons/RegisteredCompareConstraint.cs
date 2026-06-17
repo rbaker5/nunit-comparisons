@@ -1,4 +1,3 @@
-using System;
 using NUnit.Framework.Constraints;
 
 namespace NUnit.Comparisons
@@ -10,7 +9,7 @@ namespace NUnit.Comparisons
 
         public bool SkipsNewLine
         {
-            get { return _skipsNewLine; }
+            get => _skipsNewLine;
             set
             {
                 _skipsNewLine = value;
@@ -20,15 +19,13 @@ namespace NUnit.Comparisons
 
         public int Level
         {
-            get { return _level; }
+            get => _level;
             set
             {
                 _level = value;
                 Comparer.Level = value;
             }
         }
-
-        
 
         private bool _canCompare;
         private int _level;
@@ -37,49 +34,35 @@ namespace NUnit.Comparisons
         public RegisteredCompareConstraint(object expected)
         {
             Expected = expected;
-            Comparer = new ConstraintComparer() { Level = Level, SkipsNewLine = SkipsNewLine };
+            Comparer = new ConstraintComparer { Level = Level, SkipsNewLine = SkipsNewLine };
         }
 
-        public override bool Matches(object actual)
+        public override ConstraintResult ApplyTo<TActual>(TActual actual)
         {
-            this.actual = actual;
-
             if (ReferenceEquals(actual, Expected))
-                return true;
+                return new ConstraintResult(this, actual, true);
 
             if (actual == null || Expected == null)
-                return false;
+                return new ConstraintResult(this, actual, false);
 
             _canCompare = Comparer.CanCompare(Expected, actual);
             if (!_canCompare)
-                return false;
+            {
+                return new DelegatingConstraintResult(this, actual, false,
+                    writer =>
+                    {
+                        writer.Write("The expected type ");
+                        writer.Write(Expected.GetType().Name);
+                        writer.Write(" is not comparable to the actual type ");
+                        writer.Write(actual!.GetType().Name);
+                    });
+            }
 
-            return Comparer.Equals(Expected, actual);
+            bool success = Comparer.Equals(Expected, actual);
+            return new DelegatingConstraintResult(this, actual, success,
+                writer => Comparer.WriteMessageTo(writer));
         }
 
-        public override void WriteMessageTo(MessageWriter writer)
-        {
-            if (actual == null || Expected == null)
-            {
-                base.WriteMessageTo(writer);
-            }
-            else if (!_canCompare)
-            {
-                writer.Write("The expected type ");
-                writer.Write(Expected.GetType().Name);
-                writer.Write(" is not comparable to the actual type ");
-                writer.Write(actual.GetType().Name);
-            }
-            else
-            {
-                Comparer.WriteMessageTo(writer);
-            }
-        }
-
-        public override void WriteDescriptionTo(MessageWriter writer)
-        {
-            writer.Write(" comparable to ");
-            writer.WriteExpectedValue(Expected);
-        }
+        public override string Description => $"comparable to {Expected}";
     }
 }

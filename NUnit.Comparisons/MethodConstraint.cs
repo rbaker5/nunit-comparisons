@@ -5,20 +5,18 @@ using NUnit.Framework.Constraints;
 
 namespace NUnit.Comparisons
 {
-    public class MethodConstraint
-        : PrefixConstraint, INestableConstraint
+    public class MethodConstraint : PrefixConstraint, INestableConstraint
     {
         public int Level
         {
-            get { return _level; }
+            get => _level;
             set
             {
                 _level = value;
-                var nestableConstraint = baseConstraint as INestableConstraint;
-                if (nestableConstraint != null)
+                if (BaseConstraint is INestableConstraint nestable)
                 {
-                    nestableConstraint.Level = value;
-                    nestableConstraint.SkipsNewLine = true;
+                    nestable.Level = value;
+                    nestable.SkipsNewLine = true;
                 }
             }
         }
@@ -28,59 +26,37 @@ namespace NUnit.Comparisons
         private readonly string _name;
         private readonly object[] _arguments;
         private readonly Type[] _argumentTypes;
-        private object _returnValue;
         private int _level;
 
-        public MethodConstraint(Constraint baseConstraint, string name, params object[] arguments)
-            : base(baseConstraint)
+        public MethodConstraint(IConstraint baseConstraint, string name, params object[] arguments)
+            : base(baseConstraint, $"method {name}")
         {
             _name = name;
             _arguments = arguments;
-            _argumentTypes = arguments == null ? Type.EmptyTypes : arguments.Select(argument => argument.GetType()).ToArray();
+            _argumentTypes = arguments == null ? Type.EmptyTypes : arguments.Select(a => a.GetType()).ToArray();
         }
 
-        public override bool Matches(object actual)
+        public override ConstraintResult ApplyTo<TActual>(TActual actual)
         {
-            this.actual = actual;
-            if (actual == null)
-                throw new ArgumentNullException("actual");
-            MethodInfo method = actual.GetType().GetMethod(_name,
-                                                           BindingFlags.Instance |
-                                                           BindingFlags.Public |
-                                                           BindingFlags.NonPublic |
-                                                           BindingFlags.GetProperty,
-                                                           null, _argumentTypes, null);
+            if (actual == null) throw new ArgumentNullException(nameof(actual));
+
+            var method = actual.GetType().GetMethod(_name,
+                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.GetProperty,
+                null, _argumentTypes, null);
             if (method == null)
-                throw new ArgumentException(string.Format("Method {0} was not found", _name), "name");
-            _returnValue = method.Invoke(actual, _arguments);
-            return baseConstraint.Matches(_returnValue);
+                throw new ArgumentException($"Method {_name} was not found", nameof(_name));
+
+            var returnValue = method.Invoke(actual, _arguments);
+            var innerResult = BaseConstraint.ApplyTo(returnValue);
+            return new DelegatingConstraintResult(this, actual, innerResult.IsSuccess,
+                writer =>
+                {
+                    if (!SkipsNewLine) writer.WriteIndent(Level);
+                    writer.Write("  method " + _name + " ");
+                    innerResult.WriteMessageTo(writer);
+                });
         }
 
-        public override void WriteMessageTo(MessageWriter writer)
-        {
-            if (!SkipsNewLine) writer.WriteIndent(Level);
-            writer.WritePredicate("method " + _name);
-            baseConstraint.WriteMessageTo(writer);
-        }
-
-        public override void WriteDescriptionTo(MessageWriter writer)
-        {
-            if (!SkipsNewLine) writer.WritePredicate("method " + _name);
-            if (baseConstraint == null)
-                return;
-            if (baseConstraint is EqualConstraint)
-                writer.WritePredicate("equal to");
-            baseConstraint.WriteDescriptionTo(writer);
-        }
-
-        public override void WriteActualValueTo(MessageWriter writer)
-        {
-            writer.WriteActualValue(_returnValue);
-        }
-
-        protected override string GetStringRepresentation()
-        {
-            return string.Format("<method {0} {1}>", _name, baseConstraint);
-        }
+        protected override string GetStringRepresentation() => $"<method {_name} {BaseConstraint}>";
     }
 }

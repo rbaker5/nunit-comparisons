@@ -1,17 +1,18 @@
 using System;
-using System.Diagnostics.Contracts;
 using NUnit.Framework;
 using NUnit.Framework.Constraints;
 
 namespace NUnit.Comparisons
 {
-    public abstract class CompareConstraint<TActual, TExpected> : ComplexConstraint, ICompareConstraint 
+    public abstract class CompareConstraint<TActual, TExpected> : ComplexConstraint, ICompareConstraint
         where TActual : class
         where TExpected : class
     {
+        private TActual? _storedActual;
+
         protected bool ConstraintsSet { get; private set; }
-        public TExpected Expected { get; set; }
-        public TActual Actual { get { return (TActual)actual; } }
+        public TExpected? Expected { get; set; }
+        public TActual? Actual => _storedActual;
 
         public void Initialize(TExpected expected)
         {
@@ -27,28 +28,19 @@ namespace NUnit.Comparisons
 
         protected virtual void WriteActualName(MessageWriter writer)
         {
-            writer.Write(GetActualName(Actual));
+            writer.Write(GetActualName(Actual!));
         }
 
         protected virtual void WriteExpectedName(MessageWriter writer)
         {
-            writer.Write(GetExpectedName(Expected));
+            writer.Write(GetExpectedName(Expected!));
         }
 
-        string ICompareConstraint.GetActualName(object actual)
-        {
-            Contract.Assert(actual is TActual);
-            return GetActualName((TActual) actual);
-        }
+        string ICompareConstraint.GetActualName(object actual) => GetActualName((TActual)actual);
+        string ICompareConstraint.GetExpectedName(object expected) => GetExpectedName((TExpected)expected);
 
-        string ICompareConstraint.GetExpectedName(object expected)
-        {
-            Contract.Assert(expected is TExpected);
-            return GetExpectedName((TExpected)expected);
-        }
-
-        public abstract String GetActualName(TActual actual);
-        public abstract String GetExpectedName(TExpected expected);
+        public abstract string GetActualName(TActual actual);
+        public abstract string GetExpectedName(TExpected expected);
 
         protected override bool InternalMatches(object actual)
         {
@@ -58,19 +50,13 @@ namespace NUnit.Comparisons
             if (actual == null || Expected == null)
                 return false;
 
-            if (!(actual is TActual))
-                throw new ArgumentException(GetTypeMistmatchMessage(actual));
+            if (actual is not TActual typed)
+                throw new ArgumentException(
+                    $"This constraint can only compare objects of type {typeof(TActual).Name} to objects of type {typeof(TExpected).Name}, but actual type was {actual.GetType()}");
 
+            _storedActual = typed;
             initializeConstraints();
             return base.InternalMatches(actual);
-        }
-
-        private static string GetTypeMistmatchMessage(object actual)
-        {
-                return String.Format(
-                    "This constraint can only compare objects of type {0} to objects of type {1}, but actual type was {2}" ,
-                    typeof (TActual).Name, typeof (TExpected).Name, actual.GetType());
-            
         }
 
         private void initializeConstraints()
@@ -85,9 +71,7 @@ namespace NUnit.Comparisons
         protected virtual void AddConstraints()
         {
             if (Expected == null)
-            {
                 Add(Is.Null);
-            }
             else
             {
                 Add(Is.Not.Null);
@@ -95,13 +79,10 @@ namespace NUnit.Comparisons
             }
         }
 
-        public override void WriteDescriptionTo(MessageWriter writer)
-        {
-            writer.Write("Comparison of actual type {0} to expected type {1}", typeof (TActual).Name,
-                         typeof (TExpected).Name);
-        }
+        public override string Description =>
+            $"Comparison of actual type {typeof(TActual).Name} to expected type {typeof(TExpected).Name}";
 
-        public override void WriteMessageTo(MessageWriter writer)
+        protected override void WriteFailure(MessageWriter writer)
         {
             if (Actual == null)
             {
@@ -124,11 +105,11 @@ namespace NUnit.Comparisons
             else
             {
                 if (!SkipsNewLine) writer.WriteIndent(Level);
-                writer.Write(typeof (TActual).Name);
+                writer.Write(typeof(TActual).Name);
                 writer.Write(" {");
                 WriteActualName(writer);
                 writer.WriteLine("} should have matched the expected value, but did not.");
-                base.WriteMessageTo(writer);
+                base.WriteFailure(writer);
             }
         }
     }

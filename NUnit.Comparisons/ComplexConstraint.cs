@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework.Constraints;
@@ -8,18 +7,19 @@ namespace NUnit.Comparisons
     public abstract class ComplexConstraint : Constraint, INestableConstraint
     {
         private int _level;
-        protected List<Constraint> Constraints { get; private set; }
-        protected Constraint FailedConstraint { get; private set; }
+        private ConstraintResult? _failedResult;
+
+        protected List<IConstraint> Constraints { get; private set; }
+        protected IConstraint? FailedConstraint { get; private set; }
+
         public int Level
         {
-            get { return _level; }
+            get => _level;
             set
             {
                 _level = value;
                 foreach (var constraint in Constraints.OfType<INestableConstraint>())
-                {
-                    constraint.Level = Level + 1;
-                }
+                constraint.Level = Level + 1;
             }
         }
 
@@ -27,37 +27,45 @@ namespace NUnit.Comparisons
 
         protected ComplexConstraint()
         {
-            Constraints = new List<Constraint>();
+            Constraints = new List<IConstraint>();
         }
 
         protected void Add(IResolveConstraint constraint)
         {
-            Constraint resolvedConstraint = constraint.Resolve();
-            var nestableConstraint = resolvedConstraint as INestableConstraint;
-            if (nestableConstraint != null)
-            {
-                nestableConstraint.Level = Level + 1;
-            }
-            Constraints.Add(resolvedConstraint);
+            var resolved = constraint.Resolve();
+            if (resolved is INestableConstraint nestable)
+                nestable.Level = Level + 1;
+            Constraints.Add(resolved);
         }
 
-        public override bool Matches(object actual)
+        public override ConstraintResult ApplyTo<TActual>(TActual actual)
         {
-            this.actual = actual;
-            return InternalMatches(actual);
+            bool success = InternalMatches(actual!);
+            return new DelegatingConstraintResult(this, actual, success, WriteFailure);
         }
 
         protected virtual bool InternalMatches(object actual)
         {
-            FailedConstraint =
-                Constraints.FirstOrDefault(constraint => !(constraint.Matches(actual)));
-            return (FailedConstraint == null);
+            foreach (var c in Constraints)
+            {
+                var result = c.ApplyTo(actual);
+                if (!result.IsSuccess)
+                {
+                    _failedResult = result;
+                    FailedConstraint = c;
+                    return false;
+                }
+            }
+            _failedResult = null;
+            FailedConstraint = null;
+            return true;
         }
 
-        public override void WriteMessageTo(MessageWriter writer)
+        protected virtual void WriteFailure(MessageWriter writer)
         {
-            if (!(SkipsNewLine || FailedConstraint is INestableConstraint)) writer.WriteIndent(Level + 1);
-            FailedConstraint.WriteMessageTo(writer);
+            if (!(SkipsNewLine || FailedConstraint is INestableConstraint))
+                writer.WriteIndent(Level + 1);
+            _failedResult?.WriteMessageTo(writer);
         }
     }
 }
