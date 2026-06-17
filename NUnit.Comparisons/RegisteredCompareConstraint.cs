@@ -4,7 +4,7 @@ namespace NUnit.Comparisons
 {
     public class RegisteredCompareConstraint : Constraint, INestableConstraint
     {
-        public object Expected { get; private set; }
+        public object? Expected { get; private set; }
         public ConstraintComparer Comparer { get; private set; }
 
         public bool SkipsNewLine
@@ -31,7 +31,7 @@ namespace NUnit.Comparisons
         private int _level;
         private bool _skipsNewLine;
 
-        public RegisteredCompareConstraint(object expected)
+        public RegisteredCompareConstraint(object? expected)
         {
             Expected = expected;
             Comparer = new ConstraintComparer { Level = Level, SkipsNewLine = SkipsNewLine };

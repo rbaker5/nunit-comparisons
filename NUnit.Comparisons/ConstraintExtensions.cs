@@ -6,7 +6,7 @@ namespace NUnit.Comparisons
 {
     public static class ConstraintExtensions
     {
-        public static Constraint ComparableTo(this ConstraintExpression baseExpression, object expected)
+        public static Constraint ComparableTo(this ConstraintExpression baseExpression, object? expected)
         {
             return baseExpression.Append(new RegisteredCompareConstraint(expected));
         }

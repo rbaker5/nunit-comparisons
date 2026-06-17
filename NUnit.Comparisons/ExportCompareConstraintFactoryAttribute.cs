@@ -8,7 +8,7 @@ namespace NUnit.Comparisons
     public class ExportCompareConstraintFactoryAttribute : ExportAttribute, ICompareConstraintFactoryData
     {
         public ExportCompareConstraintFactoryAttribute() : base(typeof(ICompareConstraintFactory)) { }
-        public Type ActualType { get; set; }
-        public Type ExpectedType { get; set; }
+        public required Type ActualType { get; set; }
+        public required Type ExpectedType { get; set; }
     }
 }

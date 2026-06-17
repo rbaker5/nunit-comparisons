@@ -30,8 +30,9 @@ namespace NUnit.Comparisons
             return string.Equals(constraint.GetExpectedName(expected), constraint.GetActualName(actual));
         }
 
-        public new bool Equals(object expected, object actual)
+        public new bool Equals(object? expected, object? actual)
         {
+            if (expected == null || actual == null) return ReferenceEquals(expected, actual);
             if (!tryRemoveConstraint(expected, actual, out var constraint))
                 return false;
 

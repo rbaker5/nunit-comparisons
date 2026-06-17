@@ -1,4 +1,3 @@
-using System;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -8,17 +7,10 @@ namespace NUnit.Comparisons.Xml
     {
         protected override void AddCustomConstraints()
         {
-            Add(Has.Property("Value").EqualTo(Expected.Value.Replace("\r\n", "\n")));
+            Add(Has.Property("Value").EqualTo((Expected!.Value ?? "").Replace("\r\n", "\n")));
         }
 
-        public override string GetActualName(XText actual)
-        {
-            return null;
-        }
-
-        public override string GetExpectedName(XmlText expected)
-        {
-            return null;
-        }
+        public override string? GetActualName(XText actual) => null;
+        public override string? GetExpectedName(XmlText expected) => null;
     }
 }

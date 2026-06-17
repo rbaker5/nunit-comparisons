@@ -81,18 +81,17 @@ namespace NUnit.Comparisons
             return thisMatchState;
         }
 
-        private static void addToTally(Dictionary<MatchState, List<object>> tally, MatchState matchState, object value)
+        private static void addToTally(Dictionary<MatchState, List<object>> tally, MatchState matchState, object? value)
         {
             if (matchState == MatchState.Found)
                 return;
 
-            List<object> list;
-            if (!tally.TryGetValue(matchState, out list))
+            if (!tally.TryGetValue(matchState, out var list))
             {
                 list = new List<object>();
                 tally.Add(matchState, list);
             }
-            list.Add(value);
+            list.Add(value!);
         }
 
         private MatchState Max(MatchState state1, MatchState state2)
@@ -152,8 +151,7 @@ namespace NUnit.Comparisons
 
         private void writeNotFound(MessageWriter writer, Dictionary<MatchState, List<object>> dictionary, MatchState matchState, string message)
         {
-            List<object> list;
-            if (!dictionary.TryGetValue(matchState, out list) || list.Count <= 0) return;
+            if (!dictionary.TryGetValue(matchState, out var list) || list.Count <= 0) return;
 
             writer.WriteIndent(Level);
             writer.Write(message);

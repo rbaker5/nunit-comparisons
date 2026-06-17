@@ -8,26 +8,27 @@ using System.Reflection;
 
 namespace NUnit.Comparisons
 {
-    [Export(typeof (CompareConstraintFactory))]
+    [Export(typeof(CompareConstraintFactory))]
     public class CompareConstraintFactory
     {
+        // Populated by MEF after construction
         [ImportMany(AllowRecomposition = true)]
-        private IEnumerable<ExportFactory<ICompareConstraint, ICompareConstraintFactoryData>> _factories;
-        private IEnumerable<ExportFactory<ICompareConstraint, ICompareConstraintFactoryData>> _cachedFactories;
+        private IEnumerable<ExportFactory<ICompareConstraint, ICompareConstraintFactoryData>> _factories = null!;
+        private IEnumerable<ExportFactory<ICompareConstraint, ICompareConstraintFactoryData>> _cachedFactories = null!;
 
         private Lazy<Dictionary<Tuple<Type, Type>, ExportFactory<ICompareConstraint, ICompareConstraintFactoryData>>>
-            _constraintsByType;
+            _constraintsByType = null!;
         private Lazy<Dictionary<Type, ExportFactory<ICompareConstraint, ICompareConstraintFactoryData>>>
-            _constraintsByActualType;
+            _constraintsByActualType = null!;
 
         public CompareConstraintFactory()
         {
-           resetCache();
+            resetCache();
         }
 
         private static readonly AggregateCatalog Catalog = new AggregateCatalog();
         private static readonly CompositionContainer Container = new CompositionContainer(Catalog);
-        private static CompareConstraintFactory _instance;
+        private static CompareConstraintFactory? _instance;
 
         public static CompareConstraintFactory Instance
         {
@@ -38,7 +39,7 @@ namespace NUnit.Comparisons
                     Catalog.Catalogs.Add(new AssemblyCatalog(Assembly.GetExecutingAssembly()));
                     _instance = Container.GetExportedValue<CompareConstraintFactory>();
                 }
-                return _instance;
+                return _instance!;
             }
         }
 
@@ -49,19 +50,8 @@ namespace NUnit.Comparisons
             Catalog.Catalogs.Add(new AssemblyCatalog(assembly, registration));
         }
 
-        private static bool findConstraints(Type type)
-        {
-            if (!type.IsClass)
-                return false;
-
-            if (type.IsAbstract)
-                return false;
-
-            if (!typeof(ICompareConstraint).IsAssignableFrom(type))
-                return false;
-
-            return true;
-        }
+        private static bool findConstraints(Type type) =>
+            type.IsClass && !type.IsAbstract && typeof(ICompareConstraint).IsAssignableFrom(type);
 
         private static void createMetaData(ExportBuilder exportBuilder)
         {
@@ -70,32 +60,27 @@ namespace NUnit.Comparisons
             exportBuilder.AddMetadata("ExpectedType", getExpectedType);
         }
 
-        private static object getActualType(Type type)
-        {
-            var property = type.GetProperty("Actual");
-            return property.PropertyType;
-        }
-
-        private static object getExpectedType(Type type)
-        {
-            return type.GetProperty("Expected").PropertyType;
-        }
+        // MEF guarantees ICompareConstraint implementations have Actual/Expected properties
+        private static object getActualType(Type type) => type.GetProperty("Actual")!.PropertyType;
+        private static object getExpectedType(Type type) => type.GetProperty("Expected")!.PropertyType;
 
         public bool TryCreateConstraint(object expected, object actual, out ICompareConstraint constraint)
         {
-            ExportFactory<ICompareConstraint, ICompareConstraintFactoryData> factory;
-            if (TryGetFactory(expected.GetType(), actual.GetType(), out factory))
+            if (TryGetFactory(expected.GetType(), actual.GetType(), out var factory))
             {
-                constraint = factory.CreateExport().Value;
+                constraint = factory!.CreateExport().Value;
                 constraint.Initialize(expected);
                 return true;
             }
-            constraint = null;
+            constraint = null!;
             return false;
         }
 
-        private bool TryGetFactory(Type expectedType, Type actualType, out ExportFactory<ICompareConstraint, ICompareConstraintFactoryData> factory)
+        private bool TryGetFactory(Type expectedType, Type? actualType, out ExportFactory<ICompareConstraint, ICompareConstraintFactoryData>? factory)
         {
+            factory = null;
+            if (actualType == null) return false;
+
             if (ConstraintsByType.TryGetValue(Tuple.Create(expectedType, actualType), out factory))
                 return true;
 
@@ -119,15 +104,13 @@ namespace NUnit.Comparisons
             return TryGetFactory(expectedType, actualType.BaseType, out factory);
         }
 
-        private static bool matchesExpectedTypeOrSuperTypes(Type expectedType, ExportFactory<ICompareConstraint, ICompareConstraintFactoryData> possibleFactory)
+        private static bool matchesExpectedTypeOrSuperTypes(Type? expectedType, ExportFactory<ICompareConstraint, ICompareConstraintFactoryData> possibleFactory)
         {
-            var possibleExpectedType = expectedType;
-            while (possibleExpectedType != null)
+            while (expectedType != null)
             {
-                if (possibleExpectedType == possibleFactory.Metadata.ExpectedType)
+                if (expectedType == possibleFactory.Metadata.ExpectedType)
                     return true;
-
-                possibleExpectedType = possibleExpectedType.BaseType;
+                expectedType = expectedType.BaseType;
             }
             return false;
         }
@@ -155,14 +138,10 @@ namespace NUnit.Comparisons
         private void resetCache()
         {
             _cachedFactories = _factories;
-            _constraintsByType =
-               Lazy.Create(
-                   () =>
-                   _factories.ToDictionary(item => Tuple.Create(item.Metadata.ExpectedType, item.Metadata.ActualType)));
-            _constraintsByActualType =
-                Lazy.Create(
-                    () =>
-                    _factories.ToDictionary(item => item.Metadata.ActualType));
+            _constraintsByType = new Lazy<Dictionary<Tuple<Type, Type>, ExportFactory<ICompareConstraint, ICompareConstraintFactoryData>>>(
+                () => _factories.ToDictionary(item => Tuple.Create(item.Metadata.ExpectedType, item.Metadata.ActualType)));
+            _constraintsByActualType = new Lazy<Dictionary<Type, ExportFactory<ICompareConstraint, ICompareConstraintFactoryData>>>(
+                () => _factories.ToDictionary(item => item.Metadata.ActualType));
         }
     }
 }

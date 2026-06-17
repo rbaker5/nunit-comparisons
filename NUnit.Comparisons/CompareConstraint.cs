@@ -36,11 +36,11 @@ namespace NUnit.Comparisons
             writer.Write(GetExpectedName(Expected!));
         }
 
-        string ICompareConstraint.GetActualName(object actual) => GetActualName((TActual)actual);
-        string ICompareConstraint.GetExpectedName(object expected) => GetExpectedName((TExpected)expected);
+        string? ICompareConstraint.GetActualName(object actual) => GetActualName((TActual)actual);
+        string? ICompareConstraint.GetExpectedName(object expected) => GetExpectedName((TExpected)expected);
 
-        public abstract string GetActualName(TActual actual);
-        public abstract string GetExpectedName(TExpected expected);
+        public abstract string? GetActualName(TActual actual);
+        public abstract string? GetExpectedName(TExpected expected);
 
         protected override bool InternalMatches(object actual)
         {
