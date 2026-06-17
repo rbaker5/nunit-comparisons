@@ -1,18 +1,11 @@
-using System;
 using NUnit.Framework.Constraints;
 
 namespace NUnit.Comparisons;
 
-public class MessageConstraint : Constraint
+public class MessageConstraint(IConstraint baseConstraint, string message) : Constraint
 {
-    public IConstraint BaseConstraint { get; private set; }
-    public string Message { get; private set; }
-
-    public MessageConstraint(IConstraint baseConstraint, string message)
-    {
-        BaseConstraint = baseConstraint;
-        Message = message;
-    }
+    public IConstraint BaseConstraint { get; } = baseConstraint;
+    public string Message { get; } = message;
 
     public override ConstraintResult ApplyTo<TActual>(TActual actual)
     {
