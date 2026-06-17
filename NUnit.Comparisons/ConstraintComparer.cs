@@ -16,7 +16,7 @@ public class ConstraintComparer : IEqualityComparer
     public ConstraintComparer()
     {
         _reusableConstraints = new ConcurrentDictionary<Tuple<Type, Type>, ICompareConstraint>();
-        _failedResults = new List<ConstraintResult>();
+        _failedResults = [];
     }
 
     public bool CanCompare(object expected, object actual)

@@ -88,7 +88,7 @@ public class NamedCollectionTally
 
         if (!tally.TryGetValue(matchState, out var list))
         {
-            list = new List<object>();
+            list = [];
             tally.Add(matchState, list);
         }
         list.Add(value!);

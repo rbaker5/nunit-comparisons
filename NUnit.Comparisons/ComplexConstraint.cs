@@ -27,7 +27,7 @@ public abstract class ComplexConstraint : Constraint, INestableConstraint
 
     protected ComplexConstraint()
     {
-        Constraints = new List<IConstraint>();
+        Constraints = [];
     }
 
     protected void Add(IResolveConstraint constraint)
