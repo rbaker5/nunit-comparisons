@@ -1,0 +1,9 @@
+bin/
+obj/
+*.user
+*.suo
+.vs/
+_ReSharper*/
+*.resharper
+[Tt]humbs.db
+packages/

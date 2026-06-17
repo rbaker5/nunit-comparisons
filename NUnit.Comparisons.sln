@@ -1,0 +1,47 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NUnit.Comparisons", "NUnit.Comparisons\NUnit.Comparisons.csproj", "{2A9A8018-36AD-4031-8BDE-63A786B9D76D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NUnit.Comparisons.Tests", "NUnit.Comparisons.Tests\NUnit.Comparisons.Tests.csproj", "{098ABF6B-A770-4620-B959-E16CD155A060}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NUnit.Comparisons.Xml", "NUnit.Comparisons.Xml\NUnit.Comparisons.Xml.csproj", "{A835AB2D-3F79-41B9-BABA-D32FC7E9CFA1}"
+EndProject
+Global
+	GlobalSection(TeamFoundationVersionControl) = preSolution
+		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccLocalPath0 = .
+		SccLocalPath1 = NUnit.Comparisons
+		SccLocalPath2 = NUnit.Comparisons.Tests
+		SccLocalPath3 = NUnit.Comparisons.Xml
+		SccNumberOfProjects = 4
+		SccProjectName1 = NUnit.Comparisons
+		SccProjectName2 = NUnit.Comparisons.Tests
+		SccProjectName3 = NUnit.Comparisons.Xml
+		SccProjectUniqueName1 = NUnit.Comparisons\\NUnit.Comparisons.csproj
+		SccProjectUniqueName2 = NUnit.Comparisons.Tests\\NUnit.Comparisons.Tests.csproj
+		SccProjectUniqueName3 = NUnit.Comparisons.Xml\\NUnit.Comparisons.Xml.csproj
+		SccTeamFoundationServer = https://tfs.codeplex.com/tfs/tfs04
+	EndGlobalSection
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{098ABF6B-A770-4620-B959-E16CD155A060}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{098ABF6B-A770-4620-B959-E16CD155A060}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{098ABF6B-A770-4620-B959-E16CD155A060}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{098ABF6B-A770-4620-B959-E16CD155A060}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2A9A8018-36AD-4031-8BDE-63A786B9D76D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2A9A8018-36AD-4031-8BDE-63A786B9D76D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2A9A8018-36AD-4031-8BDE-63A786B9D76D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2A9A8018-36AD-4031-8BDE-63A786B9D76D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A835AB2D-3F79-41B9-BABA-D32FC7E9CFA1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A835AB2D-3F79-41B9-BABA-D32FC7E9CFA1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A835AB2D-3F79-41B9-BABA-D32FC7E9CFA1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A835AB2D-3F79-41B9-BABA-D32FC7E9CFA1}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
