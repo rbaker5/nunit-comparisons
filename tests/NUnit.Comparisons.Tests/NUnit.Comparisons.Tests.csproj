@@ -4,9 +4,6 @@
     <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>NUnit.Comparisons.Tests</RootNamespace>
     <AssemblyName>NUnit.Comparisons.Tests</AssemblyName>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>

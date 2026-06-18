@@ -4,8 +4,6 @@
     <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>NUnit.Comparisons</RootNamespace>
     <AssemblyName>NUnit.Comparisons</AssemblyName>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
