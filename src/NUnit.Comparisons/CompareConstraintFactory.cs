@@ -30,6 +30,10 @@ public class CompareConstraintFactory
     private static readonly CompositionContainer Container = new CompositionContainer(Catalog);
     private static CompareConstraintFactory? _instance;
 
+    /// <summary>
+    /// The singleton factory instance. Initialised lazily on first access;
+    /// includes all constraints in this assembly automatically.
+    /// </summary>
     public static CompareConstraintFactory Instance
     {
         get
@@ -43,6 +47,19 @@ public class CompareConstraintFactory
         }
     }
 
+    /// <summary>
+    /// Registers all concrete <see cref="ICompareConstraint"/> types in
+    /// <paramref name="assembly"/> with the factory.
+    /// </summary>
+    /// <remarks>
+    /// Call this once at test setup for each extension assembly. The factory
+    /// reads the <c>Actual</c> and <c>Expected</c> property types from each
+    /// constraint class via reflection to build a (TActual, TExpected) dispatch
+    /// table — no attribute decoration is required on the constraint classes.
+    ///
+    /// Assemblies are scanned lazily (on first use after registration) and the
+    /// cache is invalidated automatically when new assemblies are added.
+    /// </remarks>
     public static void AddAssembly(Assembly assembly)
     {
         var registration = new RegistrationBuilder();

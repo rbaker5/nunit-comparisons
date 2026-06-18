@@ -4,6 +4,20 @@ using NUnit.Framework.Constraints;
 
 namespace NUnit.Comparisons;
 
+/// <summary>
+/// Base class for constraints that compare an instance of <typeparamref name="TActual"/>
+/// against an instance of <typeparamref name="TExpected"/>, producing a detailed
+/// nested failure message on mismatch.
+/// </summary>
+/// <typeparam name="TActual">The type being tested (e.g. <c>XElement</c>).</typeparam>
+/// <typeparam name="TExpected">The reference type being compared against (e.g. <c>XmlElement</c>).</typeparam>
+/// <remarks>
+/// Subclass this and implement <see cref="AddCustomConstraints"/> and
+/// <see cref="GetActualName"/>/<see cref="GetExpectedName"/>. Register the
+/// assembly with <see cref="CompareConstraintFactory.AddAssembly"/> so the
+/// factory can auto-dispatch to it. See the NUnit.Comparisons.Xml project
+/// for a complete worked example.
+/// </remarks>
 public abstract class CompareConstraint<TActual, TExpected> : ComplexConstraint, ICompareConstraint
     where TActual : class
     where TExpected : class
@@ -24,6 +38,18 @@ public abstract class CompareConstraint<TActual, TExpected> : ComplexConstraint,
         Initialize((TExpected)expected);
     }
 
+    /// <summary>
+    /// Adds the sub-constraints that define what "equal" means for this type pair.
+    /// Called once per constraint instance, after <see cref="Expected"/> is set.
+    /// </summary>
+    /// <remarks>
+    /// Use <c>Add(Has.Property(...).EqualTo(Expected.SomeField))</c> etc. to
+    /// declare each field or property that must match. Each added constraint
+    /// is evaluated in order; the first failure produces the detailed message.
+    ///
+    /// Override <see cref="AddConstraints"/> (not this method) if you need to
+    /// suppress the automatic null-guard that wraps this call.
+    /// </remarks>
     protected abstract void AddCustomConstraints();
 
     protected virtual void WriteActualName(MessageWriter writer)
@@ -39,7 +65,17 @@ public abstract class CompareConstraint<TActual, TExpected> : ComplexConstraint,
     string? ICompareConstraint.GetActualName(object actual) => GetActualName((TActual)actual);
     string? ICompareConstraint.GetExpectedName(object expected) => GetExpectedName((TExpected)expected);
 
+    /// <summary>
+    /// Returns a short display name for <paramref name="actual"/> used in failure
+    /// messages (e.g. an element name, a URI). Return <c>null</c> for types that
+    /// have no meaningful identity (e.g. text nodes, comments).
+    /// </summary>
     public abstract string? GetActualName(TActual actual);
+
+    /// <summary>
+    /// Returns a short display name for <paramref name="expected"/> used in failure
+    /// messages. Return <c>null</c> for types with no meaningful identity.
+    /// </summary>
     public abstract string? GetExpectedName(TExpected expected);
 
     protected override bool InternalMatches(object actual)
@@ -68,6 +104,11 @@ public abstract class CompareConstraint<TActual, TExpected> : ComplexConstraint,
         }
     }
 
+    /// <summary>
+    /// Adds a null-guard then calls <see cref="AddCustomConstraints"/>.
+    /// Override this (not <see cref="AddCustomConstraints"/>) only when the
+    /// default null-guard behaviour is inappropriate for the type pair.
+    /// </summary>
     protected virtual void AddConstraints()
     {
         if (Expected == null)

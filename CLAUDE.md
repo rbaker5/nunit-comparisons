@@ -6,18 +6,18 @@ NUnit constraint extensions that produce **detailed nested diff output** when co
 
 ```bash
 dotnet build NUnit.Comparisons.slnx
-dotnet test NUnit.Comparisons.Tests/NUnit.Comparisons.Tests.csproj
+dotnet test NUnit.Comparisons.slnx
 ```
 
-Build is clean at 0 warnings. Keep it that way.
+Build is clean at 0 warnings (`TreatWarningsAsErrors` is enforced via `Directory.Build.props`).
 
 ## Projects
 
 | Project | Purpose |
 |---|---|
-| `NUnit.Comparisons` | Core constraint framework — base classes, MEF factory, operator/extension plumbing |
-| `NUnit.Comparisons.Xml` | XML extension — compares `XDocument`/`XElement`/etc. against `XmlDocument`/`XmlElement`/etc. |
-| `NUnit.Comparisons.Tests` | Integration tests using the XML extension as the live exercise |
+| `src/NUnit.Comparisons` | Core constraint framework — base classes, MEF factory, operator/extension plumbing |
+| `src/NUnit.Comparisons.Xml` | XML extension — compares `XDocument`/`XElement`/etc. against `XmlDocument`/`XmlElement`/etc. |
+| `tests/NUnit.Comparisons.Tests` | Integration tests using the XML extension as the live exercise |
 
 ## Architecture
 
@@ -62,11 +62,11 @@ CompareConstraintFactory.AddAssembly(typeof(XElementConstraint).Assembly);
 
 1. Create `MyTypeConstraint : CompareConstraint<MyActualType, MyExpectedType>` in your assembly.
 2. Implement `AddCustomConstraints()` — call `Add(Has.Property(...).EqualTo(...))` etc.
-3. Implement `GetActualName` / `GetExpectedName` — return a display string for error messages.
+3. Implement `GetActualName` / `GetExpectedName` — return a display string for error messages, or `null` for types with no meaningful identity (e.g. text nodes).
 4. In test setup, call `CompareConstraintFactory.AddAssembly(typeof(MyTypeConstraint).Assembly)`.
 5. Use `Assert.That(actual, Is.ComparableTo(expected))` — the factory resolves the right constraint.
 
-See `NUnit.Comparisons.Xml` for a complete example with all eight constraint types.
+See `src/NUnit.Comparisons.Xml` for a complete example with all eight constraint types.
 
 ## Key interfaces and extension points
 
@@ -77,3 +77,25 @@ See `NUnit.Comparisons.Xml` for a complete example with all eight constraint typ
 | `Has` / `Is` | Entry points for the constraint DSL inside `AddCustomConstraints()` |
 | `INestableConstraint` | Implemented by constraints that carry `Level`/`SkipsNewLine` for indented output |
 | `DelegatingConstraintResult` | Internal helper — wraps a `MessageWriter` lambda as a `ConstraintResult` |
+
+## Non-obvious behaviours
+
+### `Has.Cast<T>()` — error vs failure
+
+`CastConstraint<T>` (used via `Has.Cast<T>()`) narrows the actual value's type within a chain:
+
+```csharp
+Has.Method(Actual.Nodes).Cast<XmlElement>().ComparableTo(expectedElement)
+```
+
+If the actual value is **not** castable to `T`, it throws `InvalidCastException` rather than returning a constraint failure. This is intentional: an incompatible cast means the constraint expression itself is wrong (a programming error), not that the data mismatched. It surfaces as a test error rather than a test failure.
+
+The `(T)(object)actual` double-cast is a standard C# idiom for casting between two unconstrained generic type parameters — a direct `(T)actual` does not compile when neither type parameter is constrained relative to the other.
+
+### `Has.Property` shadows NUnit's built-in
+
+`Has.Property` in this library returns a `PropertyExtConstraint` (not NUnit's `PropertyConstraint`) so that indentation propagates through the `INestableConstraint` interface. Always use `NUnit.Comparisons.Has`, not `NUnit.Framework.Has`, inside `AddCustomConstraints`.
+
+### Constraint initialisation is deferred
+
+`AddCustomConstraints()` is called the **first time** a constraint instance is matched, not at construction. This allows the `Expected` value to be set via `Initialize()` before constraints are built. A consequence: adding constraints in a constructor will not work — they must go in `AddCustomConstraints()`.
