@@ -66,10 +66,9 @@ public static class ConstraintExtensions
 
     /// <summary>
     /// Narrows the type of the actual value to <typeparamref name="T"/> before
-    /// applying the next constraint in the chain. Throws
-    /// <see cref="InvalidCastException"/> if the actual value is not castable
-    /// to <typeparamref name="T"/> — this indicates an authoring error in the
-    /// constraint expression, not a data mismatch.
+    /// applying the next constraint in the chain. If the actual value is not
+    /// castable to <typeparamref name="T"/>, the constraint fails with a message
+    /// identifying the incompatible types.
     /// </summary>
     public static ResolvableConstraintExpression Cast<T>(this ConstraintExpression baseExpression)
     {

@@ -40,8 +40,8 @@ public class Has : Framework.Has
 
     /// <summary>
     /// Narrows the type of the actual value to <typeparamref name="T"/> before
-    /// applying the next constraint. See <see cref="CastConstraint{T}"/> for
-    /// details on when this throws vs. fails.
+    /// applying the next constraint. Fails with a descriptive message if the
+    /// actual value is not castable to <typeparamref name="T"/>.
     /// </summary>
     public static ResolvableConstraintExpression Cast<T>()
     {

@@ -88,9 +88,7 @@ See `src/NUnit.Comparisons.Xml` for a complete example with all eight constraint
 Has.Method(Actual.Nodes).Cast<XmlElement>().ComparableTo(expectedElement)
 ```
 
-If the actual value is **not** castable to `T`, it throws `InvalidCastException` rather than returning a constraint failure. This is intentional: an incompatible cast means the constraint expression itself is wrong (a programming error), not that the data mismatched. It surfaces as a test error rather than a test failure.
-
-The `(T)(object)actual` double-cast is a standard C# idiom for casting between two unconstrained generic type parameters — a direct `(T)actual` does not compile when neither type parameter is constrained relative to the other.
+If the actual value is not castable to `T`, the constraint **fails** with a message identifying the incompatible types (e.g. `"XText cannot be cast to XmlElement"`). The chain is not evaluated further. This surfaces as a normal test failure with output, consistent with how the rest of the library reports mismatches.
 
 ### `Has.Property` shadows NUnit's built-in
 

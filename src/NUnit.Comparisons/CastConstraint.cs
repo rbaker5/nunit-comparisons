@@ -1,4 +1,3 @@
-using System;
 using NUnit.Framework.Constraints;
 
 namespace NUnit.Comparisons;
@@ -16,14 +15,9 @@ namespace NUnit.Comparisons;
 /// <code>
 /// Has.Method(actual.Nodes).Cast&lt;XmlElement&gt;().ComparableTo(expectedElement)
 /// </code>
-/// If the actual value cannot be cast to <typeparamref name="T"/> at runtime,
-/// an <see cref="InvalidCastException"/> is thrown. This is intentional: an
-/// incompatible cast indicates an error in the constraint expression itself,
-/// not a data mismatch, so it surfaces as a test error rather than a failure.
-///
-/// The double cast <c>(T)(object)actual</c> is a C# idiom required because the
-/// compiler cannot verify a direct cast between two unconstrained generic type
-/// parameters. It has the same runtime semantics as a direct cast.
+/// If the actual value cannot be cast to <typeparamref name="T"/>, the constraint
+/// fails with a message identifying the incompatible types. The chain is not
+/// evaluated further.
 /// </remarks>
 public class CastConstraint<T> : PrefixConstraint, INestableConstraint
 {
@@ -50,7 +44,18 @@ public class CastConstraint<T> : PrefixConstraint, INestableConstraint
 
     public override ConstraintResult ApplyTo<TActual>(TActual actual)
     {
-        _returnValue = (T)(object)actual!;
+        if (actual is not T typed)
+        {
+            var actualTypeName = actual?.GetType().Name ?? "null";
+            return new DelegatingConstraintResult(this, actual, false,
+                writer =>
+                {
+                    if (!SkipsNewLine) writer.WriteIndent(Level);
+                    writer.Write($"{actualTypeName} cannot be cast to {typeof(T).Name}");
+                });
+        }
+
+        _returnValue = typed;
         var innerResult = BaseConstraint.ApplyTo(_returnValue);
         return new DelegatingConstraintResult(this, actual, innerResult.IsSuccess,
             writer =>
