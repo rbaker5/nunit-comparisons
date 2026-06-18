@@ -1,5 +1,5 @@
 <Solution>
-  <Project Path="NUnit.Comparisons/NUnit.Comparisons.csproj" />
-  <Project Path="NUnit.Comparisons.Xml/NUnit.Comparisons.Xml.csproj" />
-  <Project Path="NUnit.Comparisons.Tests/NUnit.Comparisons.Tests.csproj" />
+  <Project Path="src/NUnit.Comparisons/NUnit.Comparisons.csproj" />
+  <Project Path="src/NUnit.Comparisons.Xml/NUnit.Comparisons.Xml.csproj" />
+  <Project Path="tests/NUnit.Comparisons.Tests/NUnit.Comparisons.Tests.csproj" />
 </Solution>

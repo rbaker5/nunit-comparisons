@@ -22,8 +22,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NUnit.Comparisons.Xml\NUnit.Comparisons.Xml.csproj" />
-    <ProjectReference Include="..\NUnit.Comparisons\NUnit.Comparisons.csproj" />
+    <ProjectReference Include="..\..\src\NUnit.Comparisons.Xml\NUnit.Comparisons.Xml.csproj" />
+    <ProjectReference Include="..\..\src\NUnit.Comparisons\NUnit.Comparisons.csproj" />
   </ItemGroup>
 
 </Project>
