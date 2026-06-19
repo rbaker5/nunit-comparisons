@@ -28,6 +28,7 @@ public class CompareConstraintFactory
 
     private static readonly AggregateCatalog Catalog = new AggregateCatalog();
     private static readonly CompositionContainer Container = new CompositionContainer(Catalog);
+    private static readonly HashSet<Assembly> _registeredAssemblies = [];
     private static CompareConstraintFactory? _instance;
 
     /// <summary>
@@ -52,7 +53,8 @@ public class CompareConstraintFactory
     /// <paramref name="assembly"/> with the factory.
     /// </summary>
     /// <remarks>
-    /// Call this once at test setup for each extension assembly. The factory
+    /// Call this at test setup for each extension assembly; repeated calls with
+    /// the same assembly are ignored. The factory
     /// reads the <c>Actual</c> and <c>Expected</c> property types from each
     /// constraint class via reflection to build a (TActual, TExpected) dispatch
     /// table — no attribute decoration is required on the constraint classes.
@@ -62,6 +64,8 @@ public class CompareConstraintFactory
     /// </remarks>
     public static void AddAssembly(Assembly assembly)
     {
+        if (!_registeredAssemblies.Add(assembly))
+            return;
         var registration = new RegistrationBuilder();
         registration.ForTypesMatching<ICompareConstraint>(findConstraints).Export(createMetaData);
         Catalog.Catalogs.Add(new AssemblyCatalog(assembly, registration));
