@@ -27,30 +27,14 @@ jobs:
 
       - run: dotnet pack NUnit.Comparisons.slnx --no-build --configuration Release --output ./nupkg
 
-      # TODO: replace this step with the exact snippet NuGet.org shows you when
-      # you finish configuring the Trusted Publisher on nuget.org for both packages.
-      # The snippet will include the OIDC token exchange URL and the push command.
-      # Expected shape (exact endpoint TBC from NuGet docs):
-      #
-      # - name: Get NuGet token
-      #   id: nuget-token
-      #   run: |
-      #     OIDC_TOKEN=$(curl -fsSL \
-      #       -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-      #       "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=nuget:nuget.org" | jq -r .value)
-      #     NUGET_TOKEN=$(curl -fsSL -X POST \
-      #       -H "Authorization: Bearer $OIDC_TOKEN" \
-      #       "<NuGet OIDC exchange endpoint from nuget.org>" | jq -r .token)
-      #     echo "::add-mask::$NUGET_TOKEN"
-      #     echo "token=$NUGET_TOKEN" >> "$GITHUB_OUTPUT"
-      #
-      # - name: Push packages
-      #   run: |
-      #     dotnet nuget push "./nupkg/*.nupkg" \
-      #       --api-key ${{ steps.nuget-token.outputs.token }} \
-      #       --source https://api.nuget.org/v3/index.json \
-      #       --skip-duplicate
-      #     dotnet nuget push "./nupkg/*.snupkg" \
-      #       --api-key ${{ steps.nuget-token.outputs.token }} \
-      #       --source https://api.nuget.org/v3/index.json \
-      #       --skip-duplicate
+      # Get a short-lived NuGet API key
+      - name: NuGet login (OIDC → temp API key)
+        uses: NuGet/login@v1
+        id: login
+        with:
+          user: ${{ secrets.NUGET_USER }}
+    
+      # Push the package
+      - name: NuGet push
+        run: dotnet nuget push "./nupkg/*.nupkg" --api-key ${{steps.login.outputs.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json --skip-duplicate  
+        
