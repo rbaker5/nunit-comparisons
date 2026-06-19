@@ -25,7 +25,7 @@ namespace NUnit.Comparisons;
 /// including after <see cref="Instance"/> has already been used. This works because
 /// <c>[ImportMany(AllowRecomposition = true)]</c> tells MEF to update the
 /// <see cref="_factories"/> field automatically when the catalog changes. The
-/// <see cref="ReferenceEquals"/> check in <see cref="ConstraintsByType"/> and
+/// <c>ReferenceEquals</c> check in <see cref="ConstraintsByType"/> and
 /// <see cref="ConstraintsByActual"/> detects when recomposition has occurred: MEF
 /// replaces the <see cref="_factories"/> reference with a new collection, so
 /// <c>ReferenceEquals(_cachedFactories, _factories)</c> becomes false and
@@ -88,7 +88,7 @@ public class CompareConstraintFactory
     /// Adding an assembly after <see cref="Instance"/> has already been used is safe:
     /// MEF recomposes <see cref="_factories"/> automatically (via
     /// <c>AllowRecomposition = true</c>), and the next lookup detects the change via
-    /// <see cref="ReferenceEquals"/> and rebuilds the cache.
+    /// <c>ReferenceEquals</c> and rebuilds the cache.
     /// </remarks>
     public static void AddAssembly(Assembly assembly)
     {

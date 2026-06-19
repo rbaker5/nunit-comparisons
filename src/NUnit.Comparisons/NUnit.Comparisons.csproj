@@ -4,6 +4,15 @@
     <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>NUnit.Comparisons</RootNamespace>
     <AssemblyName>NUnit.Comparisons</AssemblyName>
+    <PackageId>NUnit.Comparisons</PackageId>
+    <Description>
+      NUnit constraint extensions that produce detailed nested diff output when complex
+      objects or collections don't match. Includes the core constraint framework, MEF-based
+      type-pair dispatch, and the Has/Is DSL entry points. Extend by subclassing
+      CompareConstraint&lt;TActual, TExpected&gt; and registering your assembly with
+      CompareConstraintFactory.AddAssembly().
+    </Description>
+    <PackageTags>nunit;nunit4;testing;dotnet;csharp;assertions;constraints</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

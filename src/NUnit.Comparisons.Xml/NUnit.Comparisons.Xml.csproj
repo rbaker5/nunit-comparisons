@@ -4,6 +4,13 @@
     <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>NUnit.Comparisons.Xml</RootNamespace>
     <AssemblyName>NUnit.Comparisons.Xml</AssemblyName>
+    <PackageId>NUnit.Comparisons.Xml</PackageId>
+    <Description>
+      XML extension for NUnit.Comparisons. Compares XDocument/XElement/XAttribute (LINQ to XML)
+      against XmlDocument/XmlElement/XmlAttribute (classic XML DOM) with detailed nested diff
+      output showing exactly which node differed and how.
+    </Description>
+    <PackageTags>nunit;nunit4;testing;dotnet;csharp;assertions;xml;linq-to-xml</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

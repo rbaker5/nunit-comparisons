@@ -1,0 +1,34 @@
+name: Publish
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        # SDK version is read from global.json automatically
+
+      - run: dotnet restore
+
+      - run: dotnet build NUnit.Comparisons.slnx --no-restore --configuration Release
+
+      - run: dotnet test NUnit.Comparisons.slnx --no-build --configuration Release
+
+      - run: dotnet pack NUnit.Comparisons.slnx --no-build --configuration Release --output ./nupkg
+
+      - name: Push packages
+        run: |
+          dotnet nuget push "./nupkg/*.nupkg" \
+            --api-key ${{ secrets.NUGET_API_KEY }} \
+            --source https://api.nuget.org/v3/index.json \
+            --skip-duplicate
+          dotnet nuget push "./nupkg/*.snupkg" \
+            --api-key ${{ secrets.NUGET_API_KEY }} \
+            --source https://api.nuget.org/v3/index.json \
+            --skip-duplicate
