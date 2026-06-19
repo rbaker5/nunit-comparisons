@@ -8,10 +8,36 @@ using System.Reflection;
 
 namespace NUnit.Comparisons;
 
+/// <summary>
+/// MEF-backed factory that resolves the correct <see cref="ICompareConstraint"/> for a
+/// given (actual type, expected type) pair at runtime.
+/// </summary>
+/// <remarks>
+/// <para>
+/// <see cref="Catalog"/>, <see cref="Container"/>, <see cref="_registeredAssemblies"/>,
+/// and <see cref="_instance"/> are static — shared for the lifetime of the process.
+/// Assemblies registered via <see cref="AddAssembly"/> cannot be removed, and calling
+/// <see cref="AddAssembly"/> is not thread-safe. In practice the whole library is
+/// single-threaded, so this is not an additional constraint.
+/// </para>
+/// <para>
+/// <see cref="AddAssembly"/> extends the MEF <see cref="Catalog"/> at any point,
+/// including after <see cref="Instance"/> has already been used. This works because
+/// <c>[ImportMany(AllowRecomposition = true)]</c> tells MEF to update the
+/// <see cref="_factories"/> field automatically when the catalog changes. The
+/// <see cref="ReferenceEquals"/> check in <see cref="ConstraintsByType"/> and
+/// <see cref="ConstraintsByActual"/> detects when recomposition has occurred: MEF
+/// replaces the <see cref="_factories"/> reference with a new collection, so
+/// <c>ReferenceEquals(_cachedFactories, _factories)</c> becomes false and
+/// <see cref="resetCache"/> rebuilds the lookup dictionaries against the updated set.
+/// </para>
+/// </remarks>
 [Export(typeof(CompareConstraintFactory))]
 public class CompareConstraintFactory
 {
-    // Populated by MEF after construction
+    // AllowRecomposition=true: MEF replaces _factories with a new IEnumerable when
+    // the catalog changes. The ReferenceEquals check below detects this and triggers
+    // a cache rebuild.
     [ImportMany(AllowRecomposition = true)]
     private IEnumerable<ExportFactory<ICompareConstraint, ICompareConstraintFactoryData>> _factories = null!;
     private IEnumerable<ExportFactory<ICompareConstraint, ICompareConstraintFactoryData>> _cachedFactories = null!;
@@ -54,13 +80,15 @@ public class CompareConstraintFactory
     /// </summary>
     /// <remarks>
     /// Call this at test setup for each extension assembly; repeated calls with
-    /// the same assembly are ignored. The factory
-    /// reads the <c>Actual</c> and <c>Expected</c> property types from each
-    /// constraint class via reflection to build a (TActual, TExpected) dispatch
-    /// table — no attribute decoration is required on the constraint classes.
+    /// the same assembly are ignored. The factory reads the <c>Actual</c> and
+    /// <c>Expected</c> property types from each constraint class via reflection to
+    /// build a (TActual, TExpected) dispatch table — no attribute decoration is
+    /// required on the constraint classes.
     ///
-    /// Assemblies are scanned lazily (on first use after registration) and the
-    /// cache is invalidated automatically when new assemblies are added.
+    /// Adding an assembly after <see cref="Instance"/> has already been used is safe:
+    /// MEF recomposes <see cref="_factories"/> automatically (via
+    /// <c>AllowRecomposition = true</c>), and the next lookup detects the change via
+    /// <see cref="ReferenceEquals"/> and rebuilds the cache.
     /// </remarks>
     public static void AddAssembly(Assembly assembly)
     {
@@ -97,6 +125,21 @@ public class CompareConstraintFactory
         return false;
     }
 
+    /// <summary>
+    /// Resolves the factory for a given (expected, actual) type pair, walking base types
+    /// on both sides if no exact match is registered.
+    /// </summary>
+    /// <remarks>
+    /// Lookup proceeds in two passes:
+    /// <list type="number">
+    ///   <item>Exact: looks up (expectedType, actualType) directly in the type-pair dictionary.</item>
+    ///   <item>Supertype walk: climbs actualType's inheritance chain until a registered
+    ///     actual type is found, then checks whether expectedType (or one of its base
+    ///     types) matches that factory's registered expected type. This allows a constraint
+    ///     registered for (XmlNode, XNode) to handle (XmlElement, XElement) when no more
+    ///     specific constraint exists.</item>
+    /// </list>
+    /// </remarks>
     private bool TryGetFactory(Type expectedType, Type? actualType, out ExportFactory<ICompareConstraint, ICompareConstraintFactoryData>? factory)
     {
         factory = null;
@@ -136,6 +179,9 @@ public class CompareConstraintFactory
         return false;
     }
 
+    // ConstraintsByType and ConstraintsByActual check ReferenceEquals(_cachedFactories, _factories)
+    // before each use. When MEF recomposes _factories (after AddAssembly), the reference changes
+    // and resetCache() rebuilds the lazy dictionaries against the new factory set.
     private Dictionary<Tuple<Type, Type>, ExportFactory<ICompareConstraint, ICompareConstraintFactoryData>> ConstraintsByType
     {
         get
