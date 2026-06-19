@@ -31,6 +31,8 @@ public abstract class CompareConstraint<TActual, TExpected> : ComplexConstraint,
     public void Initialize(TExpected expected)
     {
         Expected = expected;
+        ConstraintsSet = false;
+        Constraints.Clear();
     }
 
     void ICompareConstraint.Initialize(object expected)

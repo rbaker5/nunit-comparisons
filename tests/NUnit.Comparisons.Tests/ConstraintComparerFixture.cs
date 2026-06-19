@@ -80,18 +80,11 @@ public class ConstraintComparerFixture
 
     // ---- Direct constraint reuse: exposes the ConstraintsSet limitation ----
 
-    [Test, Explicit("Known bug: ConstraintsSet=true after first invocation prevents AddCustomConstraints " +
-                    "from re-running on re-use. Fix requires resetting ConstraintsSet in Initialize().")]
-    public void ReusedConstraintInstance_SecondInvocationComparesAgainstFirstExpected()
+    [Test]
+    public void ReusedConstraintInstance_AfterReinitialize_ComparesAgainstNewExpected()
     {
-        // AddCustomConstraints captures Expected.Name at build time (e.g. "Alice").
-        // After Initialize(name2), Expected.Name is "Bob" but ConstraintsSet=true
-        // prevents AddCustomConstraints from re-running. The second invocation silently
-        // compares against the first expected's captured values.
-        //
-        // ConstraintComparer avoids this by removing the constraint from its cache after
-        // each Equals call, so subsequent comparisons always get a fresh instance.
-        // This test demonstrates what goes wrong when that protection is bypassed.
+        // Initialize() resets ConstraintsSet and clears the Constraints list, allowing
+        // AddCustomConstraints to re-run against the new Expected value on next invocation.
         var constraint = new NameConstraint();
         var name1 = new XmlQualifiedName("Alice");
         var name2 = new XmlQualifiedName("Bob");
@@ -103,10 +96,6 @@ public class ConstraintComparerFixture
 
         constraint.Initialize(name2);
         var secondResult = constraint.ApplyTo(actual);
-
-        // This assertion FAILS: sub-constraints were built against "Alice" and ConstraintsSet
-        // prevents them being rebuilt for "Bob", so the result is incorrectly false.
-        Assert.That(secondResult.IsSuccess, Is.True,
-            "Bob should match Bob — fails because ConstraintsSet prevents re-running AddCustomConstraints");
+        Assert.That(secondResult.IsSuccess, Is.True, "Bob should match Bob after re-initialize");
     }
 }
