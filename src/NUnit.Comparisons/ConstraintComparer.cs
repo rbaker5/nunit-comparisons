@@ -47,16 +47,15 @@ public class ConstraintComparer : IEqualityComparer
     private bool tryGetConstraint(object expected, object actual, out ICompareConstraint constraint)
     {
         var typeSignature = Tuple.Create(expected.GetType(), actual.GetType());
-        if (!_reusableConstraints.TryGetValue(typeSignature, out constraint!))
-        {
-            if (!CompareConstraintFactory.Instance.TryCreateConstraint(expected, actual, out constraint))
-                return false;
+        constraint = _reusableConstraints.GetOrAdd(typeSignature, _ => {
+            if (!CompareConstraintFactory.Instance.TryCreateConstraint(expected, actual, out var newConstraint))
+                return null!;
 
-            constraint.Level = Level;
-            constraint.SkipsNewLine = SkipsNewLine;
-            _reusableConstraints.TryAdd(typeSignature, constraint);
-        }
-        return true;
+            newConstraint.Level = Level;
+            newConstraint.SkipsNewLine = SkipsNewLine;
+            return newConstraint;
+        });
+        return constraint != null;
     }
 
     private bool tryRemoveConstraint(object expected, object actual, out ICompareConstraint constraint)
